@@ -1,7 +1,8 @@
 """Validation unit tests — fully offline."""
 
 import pytest
-from src.validation import validate_element, validate_inputs, ValidationError
+
+from src.validation import ValidationError, validate_element, validate_inputs
 
 
 class TestValidateElement:

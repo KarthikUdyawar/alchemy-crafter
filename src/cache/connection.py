@@ -1,8 +1,7 @@
-"""
-Redis connection — single shared client instance.
-"""
+"""Redis connection — single shared client instance."""
 
 import redis
+
 from src.config import config
 
 _client: redis.Redis | None = None

@@ -1,25 +1,25 @@
-"""
-🎮 Phase 7 — CLI game loop with full experience polish.
-"""
+"""🎮 Phase 7 — CLI game loop with full experience polish."""
 
-from src.combine import combine
-from src.validation import ValidationError
 from src.cache import get_fail_count
-from src.game.state import GameState
+from src.combine import combine
 from src.game.display import (
     banner,
     show_elements,
-    show_result,
-    show_streak,
-    show_milestone,
     show_error,
-    show_hint,
-    show_stats,
-    show_session_summary,
     show_help,
+    show_hint,
+    show_milestone,
+    show_result,
+    show_session_summary,
+    show_stats,
+    show_streak,
 )
+from src.game.state import GameState
+from src.validation import ValidationError, validate_inputs
 
 HINT_THRESHOLD = 3
+COMBINE_ARITY = 2
+MIN_STREAK_TO_SHOW = 2
 
 
 def _hint_for(a: str, b: str) -> str:
@@ -34,7 +34,7 @@ def _hint_for(a: str, b: str) -> str:
     return suggestions.get(frozenset([a, b]), "keep experimenting!")
 
 
-def run_cli():
+def run_cli() -> None:
     banner()
 
     state = GameState()
@@ -75,7 +75,7 @@ def run_cli():
 
         # ── Combine ───────────────────────────────────────────────────────────
         parts = tokens[1:] if cmd == "combine" else tokens
-        if len(parts) != 2:
+        if len(parts) != COMBINE_ARITY:
             show_error("Need exactly 2 elements.  e.g.  fire water")
             continue
 
@@ -85,7 +85,6 @@ def run_cli():
             result = combine(a_raw, b_raw)
         except ValidationError as e:
             show_error(str(e))
-            from src.validation import validate_inputs
 
             try:
                 a_n, b_n = validate_inputs(a_raw, b_raw)
@@ -99,7 +98,7 @@ def run_cli():
         show_result(a_raw, b_raw, result.result, result.is_new, result.source)
 
         # Streak feedback
-        if result.is_new and state.discovery_streak >= 2:
+        if result.is_new and state.discovery_streak >= MIN_STREAK_TO_SHOW:
             show_streak(state.discovery_streak)
 
         # Milestone check
@@ -112,7 +111,7 @@ def run_cli():
             show_stats(state.stats)
 
 
-def _exit(state: GameState):
+def _exit(state: GameState) -> None:
     if state.session_combines > 0:
         show_session_summary(state.session_summary)
     else:

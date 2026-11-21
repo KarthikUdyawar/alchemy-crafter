@@ -1,7 +1,8 @@
 """Game state unit tests — milestones, streaks, summary."""
 
 import pytest
-from src.game.state import GameState, MILESTONES
+
+from src.game.state import MILESTONES, GameState
 
 
 class TestGameState:

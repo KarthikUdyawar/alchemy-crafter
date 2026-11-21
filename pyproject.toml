@@ -3,19 +3,63 @@ name = "alchemy-crafter"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+]
 dependencies = [
-    "fastapi>=0.136.1",
-    "httpx>=0.28.1",
-    "psycopg2-binary>=2.9.12",
-    "python-dotenv>=1.2.2",
-    "redis>=7.4.0",
-    "uvicorn[standard]>=0.46.0",
+  "fastapi>=0.136.1",
+  "httpx>=0.28.1",
+  "psycopg2-binary>=2.9.12",
+  "python-dotenv>=1.2.2",
+  "redis>=7.4",
+  "uvicorn[standard]>=0.46",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0",
-    "pytest-mock>=3.0",
-    "ruff>=0.15.12",
+  "mypy>=1.11",
+  "pre-commit>=4",
+  "pytest>=9",
+  "pytest-cov>=5",
+  "pytest-mock>=3",
+  "ruff>=0.15.12",
+  "types-psycopg2>=2.9",
 ]
+
+[tool.ruff]
+line-length = 100
+lint.select = [ "B", "D", "E", "F", "I", "N", "PL", "RUF", "S", "SIM", "UP" ]
+# Docstrings only where they clarify a contract: no D1xx.
+lint.ignore = [ "D1" ]
+# Startup probes import lazily so a missing service never breaks `import main`.
+lint.per-file-ignores."main.py" = [ "PLC0415" ]
+# Cache is best-effort by design (ARCHITECTURE.md): failures are swallowed on purpose.
+# The Redis client is a lazy module-level singleton.
+lint.per-file-ignores."src/cache/**" = [ "PLW0603", "S110", "SIM105" ]
+# shortcut: run_cli is one long untested loop, split it when the CLI gets tests.
+lint.per-file-ignores."src/game/cli.py" = [ "PLR0912", "PLR0915" ]
+lint.per-file-ignores."tests/**" = [ "PLC0415", "PLR2004", "S101" ]
+lint.pydocstyle.convention = "pep257"
+
+[tool.mypy]
+strict = true
+overrides = [
+  # Tests stay checked, but test functions need no annotations.
+  { module = "tests.*", disallow_untyped_defs = false, disallow_incomplete_defs = false }
+]
+
+[tool.pytest]
+ini_options.testpaths = [ "tests" ]
+ini_options.addopts = "-v --tb=short"
+ini_options.markers = [
+  "integration: requires running services (redis, postgres, ollama)",
+  "unit: fast, fully offline tests",
+]
+
+[tool.coverage]
+run.source = [ "src" ]

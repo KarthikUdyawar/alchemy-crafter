@@ -1,14 +1,11 @@
-"""
-Shared pytest fixtures — all offline, no real services needed.
-"""
+"""Shared pytest fixtures — all offline, no real services needed."""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
-
 
 # ── DB fixtures ───────────────────────────────────────────────────────────────
 
@@ -30,9 +27,7 @@ def mock_db(mocker):
 def mock_cache(mocker):
     """Patch all Redis helpers — default: all misses."""
     return {
-        "get_cached_recipe": mocker.patch(
-            "src.combine.get_cached_recipe", return_value=None
-        ),
+        "get_cached_recipe": mocker.patch("src.combine.get_cached_recipe", return_value=None),
         "set_cached_recipe": mocker.patch("src.combine.set_cached_recipe"),
         "add_to_context": mocker.patch("src.combine.add_to_context"),
         "reset_fail": mocker.patch("src.combine.reset_fail"),

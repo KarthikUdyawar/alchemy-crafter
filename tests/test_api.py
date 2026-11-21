@@ -1,20 +1,33 @@
 """
-tests/test_api.py — unit tests for FastAPI routes
+tests/test_api.py — unit tests for FastAPI routes.
+
 Covers all 5 bugs from test report round 2.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 from src.api.app import create_app
 from src.combine import CombineResult
 
+BASE_ELEMENTS = ["fire", "water", "earth", "air"]
+
 
 @pytest.fixture
 def client():
-    app = create_app()
-    with TestClient(app) as c:
+    """Offline client: no Postgres, no Redis, no real logging setup."""
+    quiet_redis = MagicMock()
+    quiet_redis.set.return_value = True
+    quiet_redis.exists.return_value = False
+    with (
+        patch("src.api.app.setup_logging"),
+        patch("src.api.app.init_db"),
+        patch("src.api.routes.get_all_elements", return_value=BASE_ELEMENTS),
+        patch("src.api.routes._redis", quiet_redis),
+        TestClient(create_app()) as c,
+    ):
         yield c
 
 
@@ -226,7 +239,7 @@ def test_get_recipes_db_error(client):
 
 @pytest.mark.unit
 def test_combine_unknown_element_rejected(client):
-    """panda + air must 404 if panda not in system."""
+    """Panda + air must 404 if panda not in system."""
     with patch(
         "src.api.routes.get_all_elements",
         return_value=["fire", "water", "earth", "air"],
@@ -251,13 +264,50 @@ def test_combine_both_elements_unknown(client):
 
 @pytest.mark.unit
 def test_combine_known_elements_pass_check(client):
-    """fire + water are both known — should proceed to combine."""
+    """Fire + water are both known — should proceed to combine."""
     fake = CombineResult(result="steam", is_new=False, source="cache", elapsed_ms=3.0)
     with (
         patch(
             "src.api.routes.get_all_elements",
             return_value=["fire", "water", "earth", "air"],
         ),
+        patch("src.api.routes.combine", return_value=fake),
+    ):
+        r = client.post("/combine", json={"a": "fire", "b": "water"})
+    assert r.status_code == 200
+
+
+@pytest.mark.unit
+def test_lock_uses_shared_redis_client():
+    """Regression: a bad import once left _redis=None, silently disabling the lock."""
+    from src.api import routes
+    from src.cache.connection import get_redis
+
+    assert routes._redis is get_redis()
+
+
+@pytest.mark.unit
+def test_lock_fails_open_when_redis_is_down(client):
+    fake = CombineResult(result="steam", is_new=True, source="ai", elapsed_ms=10.0)
+    broken_redis = MagicMock()
+    broken_redis.set.side_effect = ConnectionError("redis down")
+    broken_redis.delete.side_effect = ConnectionError("redis down")
+    with (
+        patch("src.api.routes._redis", broken_redis),
+        patch("src.api.routes.combine", return_value=fake),
+    ):
+        r = client.post("/combine", json={"a": "fire", "b": "water"})
+    assert r.status_code == 200
+
+
+@pytest.mark.unit
+def test_lock_wait_fails_open_when_redis_is_down(client):
+    fake = CombineResult(result="steam", is_new=False, source="cache", elapsed_ms=5.0)
+    broken_redis = MagicMock()
+    broken_redis.set.return_value = False
+    broken_redis.exists.side_effect = ConnectionError("redis down")
+    with (
+        patch("src.api.routes._redis", broken_redis),
         patch("src.api.routes.combine", return_value=fake),
     ):
         r = client.post("/combine", json={"a": "fire", "b": "water"})

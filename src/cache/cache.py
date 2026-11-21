@@ -8,15 +8,16 @@ context:global          → list  (recent element names, capped)
 fail:<a>:<b>            → int   (failed combination attempts)
 """
 
+from typing import cast
+
 from src.cache.connection import get_redis
 from src.config import config
-
 
 # ── Internal key builders ────────────────────────────────────────────────────
 
 
 def _recipe_key(a: str, b: str) -> str:
-    """Inputs must already be normalised (sorted)."""
+    """Return the cache key; inputs must already be normalised (sorted)."""
     return f"recipe:{a}:{b}"
 
 
@@ -33,7 +34,7 @@ CONTEXT_KEY = "context:global"
 def get_cached_recipe(a: str, b: str) -> str | None:
     """Return cached result or None on miss."""
     try:
-        return get_redis().get(_recipe_key(a, b))
+        return cast("str | None", get_redis().get(_recipe_key(a, b)))
     except Exception:
         return None
 
@@ -60,6 +61,7 @@ def delete_cached_recipe(a: str, b: str) -> None:
 def add_to_context(element: str) -> None:
     """
     Push element to the front of the global context list.
+
     Keeps the list trimmed to CONTEXT_SIZE entries.
     """
     try:
@@ -74,7 +76,7 @@ def get_recent_context(limit: int | None = None) -> list[str]:
     """Return the most recent elements seen (up to limit or CONTEXT_SIZE)."""
     n = limit if limit is not None else config.CONTEXT_SIZE
     try:
-        return get_redis().lrange(CONTEXT_KEY, 0, n - 1)
+        return cast("list[str]", get_redis().lrange(CONTEXT_KEY, 0, n - 1))
     except Exception:
         return []
 
@@ -87,7 +89,7 @@ def increment_fail(a: str, b: str) -> int:
     try:
         r = get_redis()
         key = _fail_key(a, b)
-        count = r.incr(key)
+        count = cast("int", r.incr(key))
         r.expire(key, config.CACHE_TTL)
         return count
     except Exception:
@@ -97,7 +99,7 @@ def increment_fail(a: str, b: str) -> int:
 def get_fail_count(a: str, b: str) -> int:
     """Return current fail count for a combination (0 if unknown)."""
     try:
-        val = get_redis().get(_fail_key(a, b))
+        val = cast("str | None", get_redis().get(_fail_key(a, b)))
         return int(val) if val else 0
     except Exception:
         return 0

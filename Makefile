@@ -1,9 +1,9 @@
 .PHONY: help up down restart logs ps \
-        pull-model setup dev shell \
+        pull-model setup install hooks dev shell \
         db-shell redis-shell \
-        test test-all lint clean nuke \
-		serve serve-prod \
-		clear-db clear-redis clear-all
+        serve serve-prod \
+        test test-all lint format typecheck check \
+        clean nuke clear-db clear-redis clear-all
 
 # ── Config ────────────────────────────────────────────────────────────────────
 OLLAMA_MODEL ?= llama3
@@ -39,7 +39,7 @@ pull-model: ## Pull the Ollama model (default: llama3)
 	docker compose exec ollama ollama pull $(OLLAMA_MODEL)
 
 # ── Project setup ─────────────────────────────────────────────────────────────
-setup: up ## Full first-time setup: start services + copy .env + install deps
+setup: up hooks ## Full first-time setup: services + .env + deps + git hooks
 	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
 		echo "📝 Created .env from .env.example — edit if needed"; \
@@ -50,12 +50,21 @@ setup: up ## Full first-time setup: start services + copy .env + install deps
 install: ## Install / sync Python dependencies only
 	uv sync
 
+hooks: ## Install git hooks once: commit, commit-msg, pre-push
+	uv run pre-commit install --install-hooks
+
 # ── Running the game ──────────────────────────────────────────────────────────
 dev: ## Run the CLI game
 	$(PYTHON) main.py
 
 shell: ## Open a Python REPL inside the venv
 	uv run python
+
+serve: ## API dev server (hot reload)
+	uv run uvicorn src.api.app:app --reload --host 0.0.0.0 --port 8000
+
+serve-prod: ## API production server (4 workers)
+	uv run uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 
 # ── Database & cache shells ───────────────────────────────────────────────────
 db-shell: ## Open a psql shell
@@ -64,27 +73,25 @@ db-shell: ## Open a psql shell
 redis-shell: ## Open a redis-cli shell
 	docker compose exec redis redis-cli
 
-# ── Makefile additions for Phase 10 ──────────────────────────────────────────
-# Add these targets to your existing Makefile
-
-serve:
-	uv run uvicorn src.api.app:app --reload --host 0.0.0.0 --port 8000
-
-serve-prod:
-	uv run uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 4
-
 # ── Testing ───────────────────────────────────────────────────────────────────
-test: ## Run offline unit tests (no services needed)
-	uv sync --group dev
-	uv run pytest -m unit -v
+test: ## Run offline unit tests with coverage (no services needed)
+	uv run pytest -m unit --cov --cov-report=term-missing
 
 test-all: ## Run all tests including integration (requires make up)
-	uv sync --group dev
-	uv run pytest -v
+	uv run pytest --cov --cov-report=term-missing
 
 # ── Quality ───────────────────────────────────────────────────────────────────
-lint: ## Lint with ruff
-	uv run ruff check src/ tests/ main.py --fix
+lint: ## Run all pre-commit hooks except mypy and branch guard (fixes files)
+	SKIP=no-commit-to-branch,mypy uv run pre-commit run --all-files
+
+format: ## Fix ruff lint and formatting issues
+	uv run ruff check --fix src tests main.py
+	uv run ruff format src tests main.py
+
+typecheck: ## Run strict mypy
+	uv run mypy src tests main.py
+
+check: lint typecheck test ## Full local quality gate
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
 clean: ## Remove __pycache__ and .pyc files
@@ -96,15 +103,12 @@ nuke: ## ⚠️  Stop services AND delete all volumes (wipes DB + Redis data)
 	docker compose down -v
 	@echo "💥 All volumes deleted"
 
-# ── Makefile additions: clear DB and Redis ───────────────────────────────────
-# Add these targets to your existing Makefile
-
-clear-db:
+clear-db: ## ⚠️  Truncate recipes, keep base elements
 	docker compose exec postgres psql -U alchemy -d alchemy -c \
 		"TRUNCATE TABLE recipes; DELETE FROM elements WHERE name NOT IN ('fire','water','earth','air');"
 
-clear-redis:
+clear-redis: ## ⚠️  Flush Redis
 	docker compose exec redis redis-cli FLUSHDB
 
-clear-all: clear-redis clear-db
+clear-all: clear-redis clear-db ## ⚠️  Reset Redis + DB, keep base elements
 	@echo "Redis + DB cleared. Base elements kept."

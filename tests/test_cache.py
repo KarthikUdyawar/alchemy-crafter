@@ -1,12 +1,13 @@
 """
 Cache tests.
+
 - Unit tests: mock Redis client, fully offline.
 - Integration tests: require live Redis (mark: integration).
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
 
 # ── Unit tests (mock Redis) ───────────────────────────────────────────────────
 
@@ -41,9 +42,7 @@ class TestRecipeCacheUnit:
         from src.config import config
 
         set_cached_recipe("fire", "water", "steam")
-        mock_redis.setex.assert_called_once_with(
-            "recipe:fire:water", config.CACHE_TTL, "steam"
-        )
+        mock_redis.setex.assert_called_once_with("recipe:fire:water", config.CACHE_TTL, "steam")
 
     @pytest.mark.unit
     def test_delete(self, mock_redis):
@@ -75,9 +74,7 @@ class TestContextUnit:
 
         add_to_context("steam")
         mock_redis.lpush.assert_called_once_with("context:global", "steam")
-        mock_redis.ltrim.assert_called_once_with(
-            "context:global", 0, config.CONTEXT_SIZE - 1
-        )
+        mock_redis.ltrim.assert_called_once_with("context:global", 0, config.CONTEXT_SIZE - 1)
 
     @pytest.mark.unit
     def test_get_returns_list(self, mock_redis):
@@ -87,9 +84,7 @@ class TestContextUnit:
         mock_redis.lrange.return_value = ["steam", "fire"]
         result = get_recent_context()
         assert result == ["steam", "fire"]
-        mock_redis.lrange.assert_called_once_with(
-            "context:global", 0, config.CONTEXT_SIZE - 1
-        )
+        mock_redis.lrange.assert_called_once_with("context:global", 0, config.CONTEXT_SIZE - 1)
 
     @pytest.mark.unit
     def test_get_returns_empty_on_error(self, mock_redis):
@@ -145,7 +140,7 @@ class TestCacheIntegration:
 
     @pytest.mark.integration
     def test_recipe_roundtrip(self):
-        from src.cache import get_cached_recipe, set_cached_recipe, delete_cached_recipe
+        from src.cache import delete_cached_recipe, get_cached_recipe, set_cached_recipe
 
         try:
             delete_cached_recipe("fire", "water")
@@ -173,7 +168,7 @@ class TestCacheIntegration:
 
     @pytest.mark.integration
     def test_fail_counter_roundtrip(self):
-        from src.cache import increment_fail, get_fail_count, reset_fail
+        from src.cache import get_fail_count, increment_fail, reset_fail
 
         try:
             reset_fail("lead", "gold")

@@ -1,12 +1,13 @@
 """
 DB tests.
+
 - Unit tests: mock psycopg2 connection, fully offline.
 - Integration tests: require live Postgres (mark: integration).
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ from unittest.mock import MagicMock
 def mock_conn(mocker):
     """
     Patch get_connection() so no real Postgres is needed.
+
     Returns (mock_conn, mock_cursor) for assertion access.
     """
     cur = MagicMock()
@@ -121,7 +123,6 @@ class TestRecipeQueriesUnit:
         assert result == [{"element_a": "fire", "element_b": "water", "result": "steam"}]
 
 
-
 # ── Integration tests (live Postgres) ─────────────────────────────────────────
 
 
@@ -138,7 +139,7 @@ class TestDbIntegration:
 
     @pytest.mark.integration
     def test_init_seeds_base_elements(self):
-        from src.db import init_db, get_all_elements
+        from src.db import get_all_elements, init_db
 
         init_db()
         elements = get_all_elements()
@@ -154,7 +155,7 @@ class TestDbIntegration:
 
     @pytest.mark.integration
     def test_save_element_idempotent(self):
-        from src.db import save_element, element_exists
+        from src.db import element_exists, save_element
 
         save_element("__test_steam__")
         assert element_exists("__test_steam__")
@@ -162,7 +163,7 @@ class TestDbIntegration:
 
     @pytest.mark.integration
     def test_recipe_roundtrip(self):
-        from src.db import save_recipe, get_recipe, get_all_recipes
+        from src.db import get_all_recipes, get_recipe, save_recipe
 
         save_recipe("fire", "water", "steam")
         assert get_recipe("fire", "water") == "steam"

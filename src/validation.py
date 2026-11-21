@@ -6,6 +6,7 @@ before being stored or returned to the player.
 """
 
 import re
+
 from src.config import config
 
 # Only letters, digits, spaces, and hyphens
@@ -54,9 +55,7 @@ def validate_element(name: str, inputs: tuple[str, str] | None = None) -> str:
     if inputs:
         a, b = inputs
         if cleaned in (a.lower(), b.lower()):
-            raise ValidationError(
-                f"Result '{cleaned}' is the same as one of the inputs."
-            )
+            raise ValidationError(f"Result '{cleaned}' is the same as one of the inputs.")
 
     return cleaned
 
@@ -64,6 +63,7 @@ def validate_element(name: str, inputs: tuple[str, str] | None = None) -> str:
 def validate_inputs(a: str, b: str) -> tuple[str, str]:
     """
     Validate and normalise the two player-supplied input elements.
+
     Returns the normalised (a, b) pair sorted alphabetically.
 
     Raises:
@@ -80,10 +80,7 @@ def validate_inputs(a: str, b: str) -> tuple[str, str]:
             "Element names may only contain letters, digits, spaces, and hyphens."
         )
 
-    if (
-        len(a_clean) > config.MAX_ELEMENT_LENGTH
-        or len(b_clean) > config.MAX_ELEMENT_LENGTH
-    ):
+    if len(a_clean) > config.MAX_ELEMENT_LENGTH or len(b_clean) > config.MAX_ELEMENT_LENGTH:
         raise ValidationError(
             f"Element names must be {config.MAX_ELEMENT_LENGTH} characters or fewer."
         )

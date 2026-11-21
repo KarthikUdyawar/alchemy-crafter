@@ -1,6 +1,7 @@
 """Combine pipeline unit tests — all offline via conftest fixtures."""
 
 import pytest
+
 from src.combine import combine
 from src.validation import ValidationError
 
@@ -64,9 +65,7 @@ class TestCombineAiPath:
         mocker.patch("src.combine.reset_fail")
 
         calls = iter(["fire", "steam"])  # first invalid (same as input), second ok
-        mocker.patch(
-            "src.combine.generate_recipe", side_effect=lambda a, b: next(calls)
-        )
+        mocker.patch("src.combine.generate_recipe", side_effect=lambda a, b: next(calls))
 
         r = combine("fire", "water")
         assert r.result == "steam"

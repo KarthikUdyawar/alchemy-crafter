@@ -1,7 +1,6 @@
-"""
-Phase 10 — FastAPI application factory
-"""
+"""Phase 10 — FastAPI application factory."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,7 +11,7 @@ from src.logger import setup_logging
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup: init logging + DB. Shutdown: nothing needed."""
     setup_logging()
     init_db()

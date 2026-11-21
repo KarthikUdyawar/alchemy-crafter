@@ -1,6 +1,4 @@
-"""
-Game state — session tracking, milestones, streaks.
-"""
+"""Game state — session tracking, milestones, streaks."""
 
 from src.db import get_all_elements
 
@@ -15,7 +13,7 @@ MILESTONES: list[tuple[int, str]] = [
 
 
 class GameState:
-    def __init__(self):
+    def __init__(self) -> None:
         self.discovered: set[str] = set()
         self.session_new: int = 0
         self.session_combines: int = 0
@@ -23,10 +21,10 @@ class GameState:
         self.best_streak: int = 0
         self._milestones_hit: set[int] = set()
 
-    def load(self):
+    def load(self) -> None:
         self.discovered = set(get_all_elements())
 
-    def record_combine(self, result: str, is_new: bool):
+    def record_combine(self, result: str, is_new: bool) -> None:
         self.discovered.add(result)
         self.session_combines += 1
         if is_new:
@@ -47,9 +45,7 @@ class GameState:
 
     @property
     def stats(self) -> str:
-        streak = (
-            f"  streak: {self.discovery_streak}" if self.discovery_streak > 1 else ""
-        )
+        streak = f"  streak: {self.discovery_streak}" if self.discovery_streak > 1 else ""
         return (
             f"elements: {len(self.discovered)}  |  "
             f"combines: {self.session_combines}  |  "

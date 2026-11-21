@@ -1,6 +1,7 @@
 """
-Phase 10 — FastAPI API layer
-Endpoints: POST /combine, GET /elements, GET /recipes, GET /health
+Phase 10 — FastAPI API layer.
+
+Endpoints: POST /combine, GET /elements, GET /recipes, GET /health.
 
 Fixes applied (test report round 2):
   BUG-1  Same-element check enforced at API layer before pipeline
@@ -16,19 +17,16 @@ import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
+from src.cache.connection import get_redis
 from src.combine import combine
+from src.config import config
 from src.db.queries import get_all_elements, get_all_recipes
+from src.logger import get_logger
 from src.validation import ValidationError
 
-# Redis client used for concurrency lock (BUG-4)
-try:
-    from src.cache.connection import get_redis_client
-
-    _redis = get_redis_client()
-except Exception:
-    _redis = None
-
 router = APIRouter()
+log = get_logger("api")
+_redis = get_redis()  # lazy: no connection until the first command (BUG-4 lock)
 
 _LOCK_TTL = 10  # seconds — max time to hold a combine lock
 _LOCK_WAIT = 0.15  # seconds — poll interval while waiting for lock
@@ -48,8 +46,8 @@ class CombineRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("Element name cannot be empty")
-        if len(v) > 30:
-            raise ValueError("Element name too long (max 30 chars)")
+        if len(v) > config.MAX_ELEMENT_LENGTH:
+            raise ValueError(f"Element name too long (max {config.MAX_ELEMENT_LENGTH} chars)")
         if not re.match(r"^[a-zA-Z0-9 \-]+$", v):
             raise ValueError("Element name contains invalid characters")
         return v.lower()
@@ -76,31 +74,33 @@ class RecipeOut(BaseModel):
 
 
 def _acquire_lock(key: str) -> bool:
-    """Try to acquire a Redis NX lock. Returns True if acquired."""
-    if _redis is None:
-        return True  # no Redis → no lock → allow through
-    return bool(_redis.set(key, "1", nx=True, ex=_LOCK_TTL))
+    """Try to take a Redis NX lock. Fails open: a Redis outage must not block gameplay."""
+    try:
+        return bool(_redis.set(key, "1", nx=True, ex=_LOCK_TTL))
+    except Exception as exc:
+        log.warning("lock acquire failed for %s, continuing without lock: %s", key, exc)
+        return True
 
 
 def _release_lock(key: str) -> None:
-    if _redis is not None:
-        try:
-            _redis.delete(key)
-        except Exception:
-            pass
+    try:
+        _redis.delete(key)
+    except Exception as exc:
+        log.warning("lock release failed for %s: %s", key, exc)
 
 
 def _wait_for_lock(key: str) -> bool:
+    """Wait until the lock is free (another request is generating the recipe).
+
+    Returns True when the lock is released or Redis is unreachable, False on timeout.
     """
-    Spin-wait until lock is free (another request is generating the recipe).
-    Returns True when lock is released.
-    Returns False on timeout.
-    """
-    if _redis is None:
-        return True
     deadline = time.monotonic() + _LOCK_TIMEOUT
     while time.monotonic() < deadline:
-        if not _redis.exists(key):
+        try:
+            if not _redis.exists(key):
+                return True
+        except Exception as exc:
+            log.warning("lock wait failed for %s, continuing without lock: %s", key, exc)
             return True
         time.sleep(_LOCK_WAIT)
     return False
@@ -110,16 +110,17 @@ def _wait_for_lock(key: str) -> bool:
 
 
 @router.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     """Liveness probe."""
     return {"status": "ok"}
 
 
 @router.post("/combine", response_model=CombineResponse)
-async def combine_endpoint(body: CombineRequest):
+async def combine_endpoint(body: CombineRequest) -> CombineResponse:
     """
     Combine two elements.
-    Flow: validate → existence check → lock → Redis → Postgres → Ollama → persist → return
+
+    Flow: validate → existence check → lock → Redis → Postgres → Ollama → persist → return.
     """
     a, b = body.a, body.b  # already normalised + lowercased by validator
 
@@ -140,7 +141,7 @@ async def combine_endpoint(body: CombineRequest):
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Element lookup failed: {exc}")
+        raise HTTPException(status_code=500, detail=f"Element lookup failed: {exc}") from exc
 
     # BUG-4: Redis lock — one AI call per unique combo at a time
     sorted_pair = sorted([a, b])
@@ -158,9 +159,9 @@ async def combine_endpoint(body: CombineRequest):
     try:
         res = combine(a, b)
     except ValidationError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Combine failed: {exc}")
+        raise HTTPException(status_code=500, detail=f"Combine failed: {exc}") from exc
     finally:
         if acquired:
             _release_lock(lock_key)
@@ -179,21 +180,22 @@ async def combine_endpoint(body: CombineRequest):
 
 
 @router.get("/elements", response_model=list[ElementOut])
-async def elements_endpoint():
+async def elements_endpoint() -> list[ElementOut]:
     """Return all known elements."""
     try:
         names = get_all_elements()  # list[str]
         return [ElementOut(name=n) for n in names]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @router.get("/recipes", response_model=list[RecipeOut])
-async def recipes_endpoint():
+async def recipes_endpoint() -> list[RecipeOut]:
     """
     Return all known recipes.
+
     BUG-2: map by positional index — not dict keys.
-    Requires get_all_recipes() SQL: SELECT element_a, element_b, result FROM recipes
+    Requires get_all_recipes() SQL: SELECT element_a, element_b, result FROM recipes.
     """
     try:
         rows = get_all_recipes()  # list[dict]
@@ -206,4 +208,4 @@ async def recipes_endpoint():
             for row in rows
         ]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

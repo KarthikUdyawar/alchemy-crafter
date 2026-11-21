@@ -1,6 +1,7 @@
 """AI generator tests — offline parser + live marker."""
 
 import pytest
+
 from src.ai.generator import _build_prompt, _parse_response, generate_recipe
 
 
@@ -14,8 +15,8 @@ class TestPromptBuilder:
     @pytest.mark.unit
     def test_fallback_context(self):
         p = _build_prompt("fire", "water", [])
-        assert "none" in p                      # empty context → "none"
-        assert "fire + water" in p              # inputs still present
+        assert "none" in p  # empty context → "none"
+        assert "fire + water" in p  # inputs still present
 
 
 class TestResponseParser:

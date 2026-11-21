@@ -1,19 +1,18 @@
-"""
-Core combine pipeline — validation → cache → db → ai → persist.
-"""
+"""Core combine pipeline — validation → cache → db → ai → persist."""
 
 import time
-from src.validation import validate_inputs, validate_element, ValidationError
+
+from src.ai import generate_recipe
 from src.cache import (
-    get_cached_recipe,
-    set_cached_recipe,
     add_to_context,
+    get_cached_recipe,
     increment_fail,
     reset_fail,
+    set_cached_recipe,
 )
-from src.db import get_recipe, save_recipe, save_element
-from src.ai import generate_recipe
+from src.db import get_recipe, save_element, save_recipe
 from src.logger import get_logger
+from src.validation import ValidationError, validate_element, validate_inputs
 
 log = get_logger("combine")
 
@@ -21,13 +20,13 @@ _AI_RETRY_LIMIT = 3  # max AI retries if result fails validation
 
 
 class CombineResult:
-    def __init__(self, result: str, is_new: bool, source: str, elapsed_ms: int):
+    def __init__(self, result: str, is_new: bool, source: str, elapsed_ms: float) -> None:
         self.result = result
         self.is_new = is_new
         self.source = source  # "cache" | "db" | "ai"
         self.elapsed_ms = elapsed_ms  # total wall time
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<CombineResult result={self.result!r} "
             f"is_new={self.is_new} source={self.source} "
@@ -36,13 +35,13 @@ class CombineResult:
 
 
 def combine(raw_a: str, raw_b: str) -> CombineResult:
-    """
-    Full pipeline:
-      1. Validate + normalise inputs (sorted)
-      2. Redis cache
-      3. Postgres
-      4. Ollama (with validation retry)
-      5. Persist → DB + cache + context
+    """Run the full combine pipeline.
+
+    1. Validate + normalise inputs (sorted)
+    2. Redis cache
+    3. Postgres
+    4. Ollama (with validation retry)
+    5. Persist → DB + cache + context
     """
     t0 = time.monotonic()
 

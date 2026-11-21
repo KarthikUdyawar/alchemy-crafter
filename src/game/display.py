@@ -1,6 +1,4 @@
-"""
-Terminal output helpers — colours, banners, all feedback.
-"""
+"""Terminal output helpers — colours, banners, all feedback."""
 
 import shutil
 
@@ -14,6 +12,10 @@ _RED = "\033[31m"
 _YELLOW = "\033[93m"
 _PURPLE = "\033[35m"
 
+_STREAK_DOUBLE = 2
+_STREAK_TRIPLE = 3
+_STREAK_ON_FIRE = 5
+
 
 def _w(text: str, colour: str) -> str:
     return f"{colour}{text}{_RESET}"
@@ -23,7 +25,7 @@ def _width() -> int:
     return min(shutil.get_terminal_size().columns, 60)
 
 
-def banner():
+def banner() -> None:
     w = _width()
     print(_w("━" * w, _GOLD))
     print(_w("  🧪  A L C H E M Y   C R A F T E R", _BOLD + _GOLD))
@@ -32,7 +34,7 @@ def banner():
     print()
 
 
-def show_elements(discovered: set[str]):
+def show_elements(discovered: set[str]) -> None:
     sorted_els = sorted(discovered)
     cols = 4
     print(_w(f"\n  📚 Known elements ({len(sorted_els)}):", _CYAN))
@@ -44,7 +46,7 @@ def show_elements(discovered: set[str]):
     print()
 
 
-def show_result(a: str, b: str, result: str, is_new: bool, source: str):
+def show_result(a: str, b: str, result: str, is_new: bool, source: str) -> None:
     src_tag = _w(f"[{source}]", _DIM)
     if is_new:
         print(_w("\n  ✨ NEW DISCOVERY!", _BOLD + _GOLD))
@@ -53,16 +55,16 @@ def show_result(a: str, b: str, result: str, is_new: bool, source: str):
         print(_w(f"\n  ⚗️   {a} + {b}  →  {result}", _CYAN) + f"  {src_tag}")
 
 
-def show_streak(streak: int):
-    if streak == 2:
+def show_streak(streak: int) -> None:
+    if streak == _STREAK_DOUBLE:
         print(_w("  🔥 2 in a row!", _YELLOW))
-    elif streak == 3:
+    elif streak == _STREAK_TRIPLE:
         print(_w("  🔥🔥 3-discovery streak!", _YELLOW))
-    elif streak >= 5:
+    elif streak >= _STREAK_ON_FIRE:
         print(_w(f"  🔥🔥🔥 {streak}-discovery streak — on fire!", _BOLD + _YELLOW))
 
 
-def show_milestone(msg: str):
+def show_milestone(msg: str) -> None:
     w = _width()
     print()
     print(_w("  " + "★" * ((w - 4) // 2), _GOLD))
@@ -70,19 +72,19 @@ def show_milestone(msg: str):
     print(_w("  " + "★" * ((w - 4) // 2), _GOLD))
 
 
-def show_error(msg: str):
+def show_error(msg: str) -> None:
     print(_w(f"\n  ✗  {msg}", _RED))
 
 
-def show_hint(msg: str):
+def show_hint(msg: str) -> None:
     print(_w(f"\n  💡 {msg}", _YELLOW))
 
 
-def show_stats(stats: str):
+def show_stats(stats: str) -> None:
     print(_w(f"\n  {stats}", _DIM))
 
 
-def show_session_summary(lines: list[str]):
+def show_session_summary(lines: list[str]) -> None:
     w = _width()
     print()
     print(_w("━" * w, _GOLD))
@@ -93,7 +95,7 @@ def show_session_summary(lines: list[str]):
     print()
 
 
-def show_help():
+def show_help() -> None:
     print(_w("\n  Commands:", _CYAN))
     print("    <a> <b>       combine two elements  (e.g. fire water)")
     print("    list          show all known elements")

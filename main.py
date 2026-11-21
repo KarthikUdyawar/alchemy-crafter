@@ -1,23 +1,23 @@
 """
-🧪 Alchemy Crafter — Main Entry Point
-Run with: uv run main.py
+🧪 Alchemy Crafter — Main Entry Point.
+
+Run with: uv run main.py.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from src.logger import setup_logging
 from src.config import config
-from src.logger import get_logger
+from src.logger import get_logger, setup_logging
 
 setup_logging()  # must be first before any src imports
 
 log = get_logger("main")
 
 
-def check_services() -> list:
+def check_services() -> list[str]:
     issues = []
 
     try:
@@ -56,7 +56,7 @@ def check_services() -> list:
     return issues
 
 
-def main():
+def main() -> None:
     print("🧪 Alchemy Crafter")
     print("=" * 40)
     print("Checking services...")
