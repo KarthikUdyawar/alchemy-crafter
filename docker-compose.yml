@@ -1,7 +1,7 @@
 services:
 
   # ── Infrastructure ──────────────────────────────────────────────────────────
-  
+
   postgres:
     image: postgres:16-alpine
     container_name: alchemy_postgres
@@ -50,7 +50,7 @@ services:
       start_period: 60s
 
    # ── Application ─────────────────────────────────────────────────────────────
- 
+
   server:
     build:
       context: .
@@ -75,9 +75,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
- 
+
   # ── Monitoring ──────────────────────────────────────────────────────────────
- 
+
   adminer:
     image: adminer:latest
     restart: unless-stopped
@@ -89,7 +89,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
- 
+
   redisinsight:
     image: redis/redisinsight:latest
     restart: unless-stopped
