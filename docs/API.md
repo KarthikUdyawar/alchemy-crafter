@@ -13,6 +13,7 @@
 Liveness probe.
 
 **Response `200`**
+
 ```json
 { "status": "ok" }
 ```
@@ -23,7 +24,8 @@ Liveness probe.
 
 Combine two elements. Runs full pipeline: Redis → Postgres → Ollama.
 
-**Request**
+#### Request
+
 ```json
 {
   "a": "fire",
@@ -39,6 +41,7 @@ Combine two elements. Runs full pipeline: Redis → Postgres → Ollama.
 Order-independent — `fire + water` == `water + fire`.
 
 **Response `200`**
+
 ```json
 {
   "result": "steam",
@@ -56,16 +59,18 @@ Order-independent — `fire + water` == `water + fire`.
 | `elapsed_ms` | float   | Total pipeline time in milliseconds             |
 
 **Response `422`** — invalid input
+
 ```json
 { "detail": "Elements cannot be the same" }
 ```
 
 **Response `500`** — pipeline failure (DB down, Ollama timeout, etc.)
+
 ```json
 { "detail": "Combine failed: connection refused" }
 ```
 
-**Performance targets**
+#### Performance targets
 
 | Source  | Target   |
 | ------- | -------- |
@@ -80,6 +85,7 @@ Order-independent — `fire + water` == `water + fire`.
 All known elements.
 
 **Response `200`**
+
 ```json
 [
   { "name": "air" },
@@ -93,6 +99,7 @@ All known elements.
 Includes base elements (fire, water, earth, air) + all discovered elements.
 
 **Response `500`** — DB unreachable
+
 ```json
 { "detail": "db down" }
 ```
@@ -104,6 +111,7 @@ Includes base elements (fire, water, earth, air) + all discovered elements.
 All known recipes.
 
 **Response `200`**
+
 ```json
 [
   { "element_a": "air", "element_b": "fire", "result": "smoke" },
@@ -115,6 +123,7 @@ All known recipes.
 `element_a` is always alphabetically ≤ `element_b` (inputs are sorted before storage).
 
 **Response `500`** — DB unreachable
+
 ```json
 { "detail": "db down" }
 ```
@@ -125,13 +134,13 @@ All known recipes.
 
 Swagger UI auto-generated at runtime:
 
-```
+```text
 http://localhost:8000/docs
 ```
 
 ReDoc:
 
-```
+```text
 http://localhost:8000/redoc
 ```
 
