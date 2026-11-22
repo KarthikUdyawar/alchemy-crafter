@@ -57,13 +57,13 @@ graph TD
 flowchart TD
     A([POST /combine or CLI]) --> B{Same element?}
     B -->|Yes| C[422 Unprocessable]
-    B -->|No| D{Both elements exist?}
+    B -->|No| D{Both elements exist?<br/>API only}
     D -->|No| E[404 Unknown element]
     D -->|Yes| F{Redis cache hit?}
     F -->|Yes| G[Return cached result]
     F -->|No| H{Postgres hit?}
     H -->|Yes| I[Cache + return]
-    H -->|No| J[Acquire Redis lock]
+    H -->|No| J[Acquire Redis lock<br/>API only]
     J --> K[Call Ollama \n with retries]
     K --> L{Valid single-word result?}
     L -->|No| K
@@ -76,7 +76,8 @@ flowchart TD
 - Inputs are always **normalized and sorted** alphabetically.
 - AI generation includes recent context (last `CONTEXT_SIZE` elements).
 - Strict output validation (single lowercase word, alphanumeric + limited punctuation).
-- Locking prevents duplicate AI calls for the same pair under contention.
+- The API route takes a lock so one AI call runs per pair under contention.
+  The CLI bypasses it (Sprint 2 RACE-1).
 
 ---
 

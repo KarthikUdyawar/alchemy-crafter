@@ -33,12 +33,14 @@ Combine two elements. Runs full pipeline: Redis → Postgres → Ollama.
 }
 ```
 
-| Field | Type   | Rules                                       |
-| ----- | ------ | ------------------------------------------- |
-| `a`   | string | Non-empty, ≤30 chars, alphanumeric + spaces |
-| `b`   | string | Non-empty, ≤30 chars, alphanumeric + spaces |
+| Field | Type   | Rules                                               |
+| ----- | ------ | --------------------------------------------------- |
+| `a`   | string | Non-empty, ≤30 chars, alphanumeric, spaces, hyphens |
+| `b`   | string | Non-empty, ≤30 chars, alphanumeric, spaces, hyphens |
 
 Order-independent — `fire + water` == `water + fire`.
+
+Names are trimmed and lowercased.
 
 **Response `200`**
 
@@ -58,10 +60,24 @@ Order-independent — `fire + water` == `water + fire`.
 | `source`     | string  | `"cache"` · `"db"` · `"ai"`                     |
 | `elapsed_ms` | float   | Total pipeline time in milliseconds             |
 
-**Response `422`** — invalid input
+**Response `422`** — invalid input (schema errors return FastAPI's list-shaped `detail`)
 
 ```json
 { "detail": "Elements cannot be the same" }
+```
+
+**Response `404`** — unknown element
+
+```json
+{ "detail": "Unknown element(s): steam. Discover them first." }
+```
+
+Checked in the API route only. `combine()` and the CLI do not check.
+
+**Response `503`** — another request held this pair's lock for over 5 s
+
+```json
+{ "detail": "Recipe generation in progress, try again shortly" }
 ```
 
 **Response `500`** — pipeline failure (DB down, Ollama timeout, etc.)
@@ -174,4 +190,6 @@ curl -s http://localhost:8000/recipes | jq
 | Status | Cause                                                          |
 | ------ | -------------------------------------------------------------- |
 | `422`  | Invalid input — empty, too long, same element twice, bad chars |
+| `404`  | Unknown element (API only)                                     |
+| `503`  | Pair lock held over 5 s by another request                     |
 | `500`  | DB unreachable, Ollama timeout, unexpected pipeline failure    |

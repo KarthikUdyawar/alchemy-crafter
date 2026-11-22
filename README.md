@@ -58,13 +58,13 @@ graph TD
 flowchart TD
     A([POST /combine]) --> B{Same element?}
     B -->|yes| C[422 Unprocessable]
-    B -->|no| D{Both elements exist?}
+    B -->|no| D{Both elements exist?<br/>API only}
     D -->|no| E[404 Unknown element]
     D -->|yes| F{Redis cache hit?}
     F -->|hit| G[Return cached]
     F -->|miss| H{Postgres hit?}
     H -->|hit| I[Cache + return]
-    H -->|miss| J[Acquire lock]
+    H -->|miss| J[Acquire lock<br/>API only]
     J --> K[Call Ollama\nwith retries]
     K --> L{Valid single-word result?}
     L -->|no| K
