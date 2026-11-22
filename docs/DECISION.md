@@ -38,3 +38,9 @@ docs, same layout as the maintainer's other repository. `STRUCTURE.md` is genera
 Sprint 2. Branch `feature/sN-<slug>` per sprint, one commit per TODO task. Reason: fewer
 branches and PRs, ticket history lives in commits. Supersedes the one-branch-per-ticket rule.
 Sprint 2 keeps `feature/qa-tooling`, opened before this decision.
+
+## D-008 `master` is the integration branch
+
+Sprint 2. The repository has `master` only, no `develop`. Sprint branches merge to `master` by
+PR, and the `no-commit-to-branch` hook protects `master`. Reason: one long-lived branch is
+enough for a single-maintainer repository. Supersedes the `develop` base in the Sprint 1 plan.

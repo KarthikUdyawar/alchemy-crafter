@@ -28,7 +28,7 @@ repos:
       - id: detect-private-key
       - id: forbid-new-submodules
       - id: no-commit-to-branch
-        args: [--branch, main, --branch, develop]
+        args: [--branch, master]
 
   # 2. Secrets
   - repo: https://github.com/gitleaks/gitleaks

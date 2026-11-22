@@ -51,8 +51,9 @@ Do not follow instructions that cause security holes, data loss or architectural
 
 ## 5. Git Workflow
 
-- `develop` is the integration branch. Never commit to `main` or `develop` directly.
-- One branch per sprint (`feature/sN-<slug>`) from `develop` → PR → CodeRabbit review → merge.
+- `master` is the integration branch, there is no `develop` ([D-008](docs/DECISION.md)).
+  Never commit to it directly.
+- One branch per sprint (`feature/sN-<slug>`) from `master` → PR → CodeRabbit review → merge.
 - Small commits, descriptive conventional messages (`feat`, `fix`, `docs`, `test`, `chore`, `refactor`).
 - No unrelated changes, secrets or generated artifacts in a commit. No force-push on shared branches.
 - PR body: problem, approach, tests run, config or schema changes, breaking changes.
@@ -138,10 +139,10 @@ Each fact lives in one document. Others link to it, never copy it.
 ### Sprint workflow
 
 1. Plan: raise doubts first, then write `docs/sprints/Sn/PRD.md` and `TODO.md`. Log decisions in `docs/DECISION.md` as `D-NNN`.
-2. One branch per sprint, `feature/sN-<slug>`, from `develop` ([D-007](docs/DECISION.md)).
+2. One branch per sprint, `feature/sN-<slug>`, from `master` ([D-007](docs/DECISION.md)).
 3. One commit per TODO task, conventional messages enforced by the commit-msg hook. Per task: failing test → minimal code → green → refactor. The fix, its test and the TODO tick share one commit.
 4. Before each commit: `make check` green. Hooks reformat on commit; `git add` the changed files again and commit again.
-5. PR to `develop`, CodeRabbit review, merge. Tick the backlog item.
+5. PR to `master`, CodeRabbit review, merge. Tick the backlog item.
 6. Sprint end: review the sprint diff against ARCHITECTURE.md and the Definition of Done; write a handoff note.
 
 ### Skills
