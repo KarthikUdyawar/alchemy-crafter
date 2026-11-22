@@ -72,7 +72,7 @@ Names are trimmed and lowercased.
 { "detail": "Unknown element(s): steam. Discover them first." }
 ```
 
-Checked in the API route only. `combine()` and the CLI do not check.
+An input element is not discovered yet. `combine()` raises it, so the CLI refuses too.
 
 **Response `503`** — another request held this pair's lock for over 5 s
 
@@ -190,6 +190,6 @@ curl -s http://localhost:8000/recipes | jq
 | Status | Cause                                                          |
 | ------ | -------------------------------------------------------------- |
 | `422`  | Invalid input — empty, too long, same element twice, bad chars |
-| `404`  | Unknown element (API only)                                     |
+| `404`  | Element not discovered yet                                     |
 | `503`  | Pair lock held over 5 s by another request                     |
 | `500`  | DB unreachable, Ollama timeout, unexpected pipeline failure    |

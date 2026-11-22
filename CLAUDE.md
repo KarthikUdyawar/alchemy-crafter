@@ -178,7 +178,6 @@ Docs and code differ here today. Verify in code before relying on either.
 
 - The concurrency lock lives in `src/api/routes.py`, not in `combine()`. The CLI bypasses it. The release is not token-checked.
 - API routes are `async def` but call blocking code (psycopg2, sync `httpx`, `time.sleep`).
-- The 404 existence check runs only in the API, not in `combine()` or the CLI.
 - `OLLAMA_TIMEOUT` defaults to 100s while the documented AI target is under 2s.
 - `_VALID_OUTPUT` in `src/ai/generator.py` is unused; the parser applies its own regex.
 

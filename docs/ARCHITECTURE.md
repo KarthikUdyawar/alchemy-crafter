@@ -57,7 +57,7 @@ graph TD
 flowchart TD
     A([POST /combine or CLI]) --> B{Same element?}
     B -->|Yes| C[422 Unprocessable]
-    B -->|No| D{Both elements exist?<br/>API only}
+    B -->|No| D{Both elements discovered?}
     D -->|No| E[404 Unknown element]
     D -->|Yes| F{Redis cache hit?}
     F -->|Yes| G[Return cached result]

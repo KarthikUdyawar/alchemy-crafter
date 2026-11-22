@@ -12,8 +12,6 @@ from fastapi.testclient import TestClient
 from src.api.app import create_app
 from src.combine import CombineResult
 
-BASE_ELEMENTS = ["fire", "water", "earth", "air"]
-
 
 @pytest.fixture
 def client():
@@ -24,7 +22,6 @@ def client():
     with (
         patch("src.api.app.setup_logging"),
         patch("src.api.app.init_db"),
-        patch("src.api.routes.get_all_elements", return_value=BASE_ELEMENTS),
         patch("src.api.routes._redis", quiet_redis),
         TestClient(create_app()) as c,
     ):
@@ -240,22 +237,14 @@ def test_get_recipes_db_error(client):
 @pytest.mark.unit
 def test_combine_unknown_element_rejected(client):
     """Panda + air must 404 if panda not in system."""
-    with patch(
-        "src.api.routes.get_all_elements",
-        return_value=["fire", "water", "earth", "air"],
-    ):
-        r = client.post("/combine", json={"a": "panda", "b": "air"})
+    r = client.post("/combine", json={"a": "panda", "b": "air"})
     assert r.status_code == 404
     assert "panda" in r.json()["detail"]
 
 
 @pytest.mark.unit
 def test_combine_both_elements_unknown(client):
-    with patch(
-        "src.api.routes.get_all_elements",
-        return_value=["fire", "water", "earth", "air"],
-    ):
-        r = client.post("/combine", json={"a": "panda", "b": "dragon"})
+    r = client.post("/combine", json={"a": "panda", "b": "dragon"})
     assert r.status_code == 404
     detail = r.json()["detail"]
     assert "panda" in detail
@@ -266,13 +255,7 @@ def test_combine_both_elements_unknown(client):
 def test_combine_known_elements_pass_check(client):
     """Fire + water are both known — should proceed to combine."""
     fake = CombineResult(result="steam", is_new=False, source="cache", elapsed_ms=3.0)
-    with (
-        patch(
-            "src.api.routes.get_all_elements",
-            return_value=["fire", "water", "earth", "air"],
-        ),
-        patch("src.api.routes.combine", return_value=fake),
-    ):
+    with patch("src.api.routes.combine", return_value=fake):
         r = client.post("/combine", json={"a": "fire", "b": "water"})
     assert r.status_code == 200
 
@@ -312,3 +295,27 @@ def test_lock_wait_fails_open_when_redis_is_down(client):
     ):
         r = client.post("/combine", json={"a": "fire", "b": "water"})
     assert r.status_code == 200
+
+
+@pytest.mark.unit
+def test_combine_does_not_prefetch_elements(client):
+    """combine() owns the discovered check: no second query per request."""
+    fake = CombineResult(result="steam", is_new=False, source="cache", elapsed_ms=3.0)
+    with (
+        patch("src.api.routes.get_all_elements", side_effect=AssertionError("pre-check")) as lookup,
+        patch("src.api.routes.combine", return_value=fake),
+    ):
+        r = client.post("/combine", json={"a": "fire", "b": "water"})
+    assert r.status_code == 200
+    lookup.assert_not_called()
+
+
+@pytest.mark.unit
+def test_combine_unknown_element_maps_to_404(client):
+    from src.validation import UnknownElementError
+
+    err = UnknownElementError("Unknown element(s): steam. Discover them first.")
+    with patch("src.api.routes.combine", side_effect=err):
+        r = client.post("/combine", json={"a": "fire", "b": "water"})
+    assert r.status_code == 404
+    assert "steam" in r.json()["detail"]

@@ -22,7 +22,7 @@ from src.combine import combine
 from src.config import config
 from src.db.queries import get_all_elements, get_all_recipes
 from src.logger import get_logger
-from src.validation import ValidationError
+from src.validation import UnknownElementError, ValidationError
 
 router = APIRouter()
 log = get_logger("api")
@@ -120,28 +120,14 @@ async def combine_endpoint(body: CombineRequest) -> CombineResponse:
     """
     Combine two elements.
 
-    Flow: validate → existence check → lock → Redis → Postgres → Ollama → persist → return.
+    Flow: validate → lock → combine() (discovered check → Redis → Postgres → Ollama →
+    persist) → return.
     """
     a, b = body.a, body.b  # already normalised + lowercased by validator
 
     # BUG-1: same-element guard at API layer
     if a == b:
         raise HTTPException(status_code=422, detail="Elements cannot be the same")
-
-    # Existence check — both elements must be known to the system
-    try:
-        known = set(get_all_elements())
-        unknown = [e for e in (a, b) if e not in known]
-        if unknown:
-            missing = ", ".join(unknown)
-            raise HTTPException(
-                status_code=404,
-                detail=f"Unknown element(s): {missing}. Discover them first.",
-            )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Element lookup failed: {exc}") from exc
 
     # BUG-4: Redis lock — one AI call per unique combo at a time
     sorted_pair = sorted([a, b])
@@ -158,6 +144,8 @@ async def combine_endpoint(body: CombineRequest) -> CombineResponse:
 
     try:
         res = combine(a, b)
+    except UnknownElementError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
