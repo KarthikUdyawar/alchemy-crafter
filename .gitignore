@@ -181,3 +181,4 @@ cython_debug/
 .cursorindexingignore
 
 v0.2/
+backups/
