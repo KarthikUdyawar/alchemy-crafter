@@ -6,10 +6,10 @@ Scope: [PRD.md](PRD.md). Decisions: [DECISION.md](../../DECISION.md).
 
 ### 🧾 DOC-1 — Reconcile docs with code
 
-- [ ] SPRINT_1 lists CLI/API/tests as out of scope but they exist → add "shipped" note
-- [ ] Fix test count (85+ vs ~100) from `pytest --collect-only`
-- [ ] Fix ARCHITECTURE.md links (`./docs/PRD.md` → `./ROADMAP.md`)
-- [ ] API.md: document 404 unknown element, or drop it from flow diagrams
+- [x] SPRINT_1 lists CLI/API/tests as out of scope but they exist → add "shipped" note
+- [x] Fix test count (85+ vs ~100) from `pytest --collect-only`
+- [x] Fix ARCHITECTURE.md links (`./docs/PRD.md` → `./ROADMAP.md`)
+- [x] API.md: document 404 unknown element, or drop it from flow diagrams
 - [ ] Resolve AI target (<2s) vs `OLLAMA_TIMEOUT` (100s)
 
 ### 🎮 PLAY-1 — Player progress
@@ -50,6 +50,6 @@ Scope: [PRD.md](PRD.md). Decisions: [DECISION.md](../../DECISION.md).
 
 ## Definition of Done
 
-- [ ] All branches merged to `develop`, CI green
+- [ ] Sprint branch merged to `master`, CI green
 - [ ] `docker compose up` smoke: restart keeps progress
 - [ ] TODO.md checked off
