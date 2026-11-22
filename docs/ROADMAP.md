@@ -1,10 +1,10 @@
-# 🧪 Product Requirements Document (PRD)
+# 🧪 Roadmap and Product Requirements
 
 ## Product: Alchemy Crafter (AI-Driven Crafting Game)
 
 ---
 
-# 1. 🎯 Objective
+## 1. Objective
 
 Build a **single-player alchemy game** where users combine elements to discover new ones.
 
@@ -14,7 +14,7 @@ Build a **single-player alchemy game** where users combine elements to discover 
 
 ---
 
-# 2. 🧩 Core Concept
+## 2. Core Concept
 
 Users start with base elements:
 
@@ -37,7 +37,7 @@ System:
 
 ---
 
-# 3. 👤 Target User
+## 3. Target User
 
 * Developers / hackers (your audience)
 * Casual players who like discovery games
@@ -45,9 +45,9 @@ System:
 
 ---
 
-# 4. 🎮 Core Features
+## 4. Core Features
 
-## 4.1 Element Combination
+### 4.1 Element Combination
 
 * Input: 2 elements
 * Output: 1 result element
@@ -55,7 +55,7 @@ System:
 
 ---
 
-## 4.2 Discovery System
+### 4.2 Discovery System
 
 * Track discovered elements
 * Show:
@@ -65,7 +65,7 @@ System:
 
 ---
 
-## 4.3 AI Recipe Generation
+### 4.3 AI Recipe Generation
 
 * Use Ollama when:
 
@@ -77,14 +77,14 @@ System:
 
 ---
 
-## 4.4 Caching Layer (Redis)
+### 4.4 Caching Layer (Redis)
 
 * Cache recipes for instant reuse
 * Store recent context for AI prompts
 
 ---
 
-## 4.5 Persistence (Postgres)
+### 4.5 Persistence (Postgres)
 
 * Store:
 
@@ -93,7 +93,7 @@ System:
 
 ---
 
-## 4.6 Feedback System
+### 4.6 Feedback System
 
 * Success → show result
 * Failure → meaningful message
@@ -101,7 +101,7 @@ System:
 
 ---
 
-# 5. ⚙️ System Architecture
+## 5. ⚙️ System Architecture
 
 ```text
 Client (CLI / API)
@@ -115,9 +115,9 @@ Client (CLI / API)
 
 ---
 
-# 6. 🗄️ Data Model
+## 6. 🗄️ Data Model
 
-## Elements Table
+### Elements Table
 
 ```sql
 id SERIAL PRIMARY KEY
@@ -127,7 +127,7 @@ created_at TIMESTAMP
 
 ---
 
-## Recipes Table
+### Recipes Table
 
 ```sql
 id SERIAL PRIMARY KEY
@@ -139,7 +139,7 @@ UNIQUE(element_a, element_b)
 
 ---
 
-## Redis Keys
+### Redis Keys
 
 ```text
 recipe:<a>:<b>           → result
@@ -150,9 +150,9 @@ fail:<a>:<b>             → count
 
 ---
 
-# 7. 🔄 Core Flow
+## 7. 🔄 Core Flow
 
-## Combine Elements
+### Combine Elements
 
 ```text
 1. Normalize input (sort)
@@ -166,9 +166,9 @@ fail:<a>:<b>             → count
 
 ---
 
-# 8. 🤖 AI Integration
+## 8. 🤖 AI Integration
 
-## Prompt Requirements
+### Prompt Requirements
 
 * Deterministic format
 * Single result only
@@ -176,7 +176,7 @@ fail:<a>:<b>             → count
 
 ---
 
-## Example Prompt
+### Example Prompt
 
 ```text
 You are an alchemy engine.
@@ -198,7 +198,7 @@ result: steam
 
 ---
 
-# 9. 🛡️ Validation Rules
+## 9. 🛡️ Validation Rules
 
 Reject if:
 
@@ -209,7 +209,7 @@ Reject if:
 
 ---
 
-# 10. ⚡ Performance Requirements
+## 10. ⚡ Performance Requirements
 
 * Response time:
 
@@ -220,7 +220,7 @@ Reject if:
 
 ---
 
-# 11. 🎮 Game Mechanics
+## 11. 🎮 Game Mechanics
 
 ## Progression
 
@@ -238,7 +238,7 @@ Reject if:
 
 ---
 
-# 12. 🧪 MVP Scope (Keep This Tight)
+## 12. 🧪 MVP Scope (Keep This Tight)
 
 ✅ CLI interface
 ✅ Combine elements
@@ -253,7 +253,7 @@ Reject if:
 
 ---
 
-# 13. 🚀 API Design (Optional)
+## 13. 🚀 API Design (Optional)
 
 ### POST `/combine`
 
@@ -275,7 +275,7 @@ Reject if:
 
 ---
 
-# 14. 📊 Success Metrics
+## 14. 📊 Success Metrics
 
 * Avg combinations per session
 * % of new discoveries
@@ -284,9 +284,9 @@ Reject if:
 
 ---
 
-# 15. ⚠️ Risks & Mitigation
+## 15. ⚠️ Risks & Mitigation
 
-## Risk: AI randomness
+### Risk: AI randomness
 
 👉 Fix:
 
@@ -295,7 +295,7 @@ Reject if:
 
 ---
 
-## Risk: Infinite nonsense elements
+### Risk: Infinite nonsense elements
 
 👉 Fix:
 
@@ -304,7 +304,7 @@ Reject if:
 
 ---
 
-## Risk: Slow responses
+### Risk: Slow responses
 
 👉 Fix:
 
@@ -313,7 +313,7 @@ Reject if:
 
 ---
 
-# 16. 🧬 Future Roadmap
+## 16. 🧬 Future Roadmap
 
 ### V0.2
 
@@ -330,7 +330,7 @@ Reject if:
 
 ---
 
-# 17. 🏗️ Tech Stack
+## 17. 🏗️ Tech Stack
 
 * Python (FastAPI or CLI)
 * PostgreSQL
@@ -340,9 +340,19 @@ Reject if:
 
 ---
 
-# 18. 🔥 Definition of Done
+## 18. 🔥 Definition of Done
 
 * User can combine any 2 elements
 * New elements are generated or fetched
 * Results persist across sessions
 * System remains consistent and fast
+
+---
+
+## 19. Sprint List
+
+| Sprint | Goal                                                       | Docs                                                 |
+| ------ | ---------------------------------------------------------- | ---------------------------------------------------- |
+| S1     | Core MVP and infrastructure                                | [PRD](sprints/S1/PRD.md), [TODO](sprints/S1/TODO.md) |
+| S2     | Gameplay loop, reliability, quality gate                   | [PRD](sprints/S2/PRD.md), [TODO](sprints/S2/TODO.md) |
+| S3     | Candidates: Web UI, auth, multiplayer, achievements, hints | not planned yet                                      |

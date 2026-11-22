@@ -3,7 +3,7 @@
 **A single-player alchemy discovery game powered by a local LLM.**  
 Combine elements to discover new ones — **infinitely**.
 
-```
+```text
 fire + water → steam
 steam + earth → mud
 mud + fire → ash
@@ -96,7 +96,7 @@ graph LR
 
 ## 📁 Project Structure
 
-```
+```text
 alchemy-crafter/
 ├── src/
 │   ├── config.py
@@ -108,7 +108,7 @@ alchemy-crafter/
 │   ├── ai/
 │   ├── api/
 │   └── game/
-├── tests/                   ← ~100 tests (mostly offline)
+├── tests/                   ← unit + integration tests
 ├── docker-compose.yml
 ├── Dockerfile.server
 ├── Makefile
@@ -116,30 +116,34 @@ alchemy-crafter/
 └── .env.example
 ```
 
-*(Full detailed structure available in the original or Architecture.md)*
+*(Generated tree: [docs/STRUCTURE.md](docs/STRUCTURE.md))*
 
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Clone the repo
+
 ```bash
 git clone https://github.com/KarthikUdyawar/alchemy-crafter
 cd alchemy-crafter
 ```
 
 ### 2. Copy environment config
+
 ```bash
 cp .env.example .env
 ```
 
 ### 3. Start services
+
 ```bash
 make setup    # first-time setup
 make up       # docker compose up
 ```
 
 ### 4. Pull the LLM model
+
 ```bash
 make pull-model                     # defaults to llama3
 # or
@@ -147,11 +151,13 @@ make pull-model OLLAMA_MODEL=mistral
 ```
 
 ### 5. Play the game
+
 ```bash
 make dev      # CLI interactive mode
 ```
 
 ### 6. Or run the API
+
 ```bash
 make serve          # development (hot reload)
 make serve-prod     # production (4 workers)
@@ -163,16 +169,16 @@ make serve-prod     # production (4 workers)
 
 ## ⚙️ Configuration (`.env`)
 
-| Variable          | Default                                      | Description                          |
-|-------------------|----------------------------------------------|--------------------------------------|
-| `DATABASE_URL`    | `postgresql://alchemy:alchemy@localhost:5432/alchemy` | Postgres connection |
-| `REDIS_URL`       | `redis://localhost:6379/0`                   | Redis connection                     |
-| `OLLAMA_URL`      | `http://localhost:11434`                     | Ollama endpoint                      |
-| `OLLAMA_MODEL`    | `llama3`                                     | Model name                           |
-| `OLLAMA_TIMEOUT`  | `100`                                        | Timeout in seconds                   |
-| `CACHE_TTL`       | `86400`                                      | Redis cache TTL (seconds)            |
-| `CONTEXT_SIZE`    | `10`                                         | Recent elements for AI prompt        |
-| `LOG_LEVEL`       | `WARNING`                                    | DEBUG / INFO / WARNING / ERROR       |
+| Variable         | Default                                               | Description                    |
+| ---------------- | ----------------------------------------------------- | ------------------------------ |
+| `DATABASE_URL`   | `postgresql://alchemy:alchemy@localhost:5432/alchemy` | Postgres connection            |
+| `REDIS_URL`      | `redis://localhost:6379/0`                            | Redis connection               |
+| `OLLAMA_URL`     | `http://localhost:11434`                              | Ollama endpoint                |
+| `OLLAMA_MODEL`   | `llama3`                                              | Model name                     |
+| `OLLAMA_TIMEOUT` | `100`                                                 | Timeout in seconds             |
+| `CACHE_TTL`      | `86400`                                               | Redis cache TTL (seconds)      |
+| `CONTEXT_SIZE`   | `10`                                                  | Recent elements for AI prompt  |
+| `LOG_LEVEL`      | `WARNING`                                             | DEBUG / INFO / WARNING / ERROR |
 
 ---
 
@@ -180,12 +186,12 @@ make serve-prod     # production (4 workers)
 
 **Base URL:** `http://localhost:8000`
 
-| Method | Endpoint     | Description                  |
-|--------|--------------|------------------------------|
-| `GET`  | `/health`    | Liveness probe               |
-| `POST` | `/combine`   | Combine two elements         |
-| `GET`  | `/elements`  | List all known elements      |
-| `GET`  | `/recipes`   | List all known recipes       |
+| Method | Endpoint    | Description             |
+| ------ | ----------- | ----------------------- |
+| `GET`  | `/health`   | Liveness probe          |
+| `POST` | `/combine`  | Combine two elements    |
+| `GET`  | `/elements` | List all known elements |
+| `GET`  | `/recipes`  | List all known recipes  |
 
 **Example** (`POST /combine`):
 
@@ -230,24 +236,30 @@ graph LR
 
 ## 🛠️ Makefile Reference
 
-| Command              | Description                              |
-|----------------------|------------------------------------------|
-| `make setup`         | First-time setup                         |
-| `make up` / `down`   | Start/stop Docker services               |
-| `make dev`           | Run CLI game                             |
-| `make serve`         | API dev server (hot-reload)              |
-| `make serve-prod`    | API production (4 workers)               |
-| `make test`          | Unit tests (offline)                     |
-| `make test-all`      | All tests (requires `make up`)           |
-| `make pull-model`    | Download Ollama model                    |
-| `make clear-all`     | Reset Redis + DB                         |
-| `make nuke`          | ⚠️ Stop + wipe all volumes               |
+| Command            | Description                                |
+| ------------------ | ------------------------------------------ |
+| `make setup`       | First-time setup                           |
+| `make up` / `down` | Start/stop Docker services                 |
+| `make dev`         | Run CLI game                               |
+| `make serve`       | API dev server (hot-reload)                |
+| `make serve-prod`  | API production (4 workers)                 |
+| `make test`        | Unit tests (offline)                       |
+| `make test-all`    | All tests (requires `make up`)             |
+| `make lint`        | Pre-commit hooks except mypy (fixes files) |
+| `make typecheck`   | Strict mypy                                |
+| `make check`       | lint + typecheck + test                    |
+| `make ci`          | Run the CI job locally (needs `act`)       |
+| `make tree`        | Regenerate `docs/STRUCTURE.md`             |
+| `make status`      | Branch, stashes, recent commits            |
+| `make pull-model`  | Download Ollama model                      |
+| `make clear-all`   | Reset Redis + DB                           |
+| `make nuke`        | Stop + wipe all volumes                    |
 
 ---
 
 ## 🧪 Testing
 
-- `make test` — ~100 unit tests, fully offline, fast
+- `make test` — offline unit tests, fast
 - `make test-all` — includes integration tests (run `make up` first)
 
 Markers: `@pytest.mark.unit` | `@pytest.mark.integration`
@@ -289,7 +301,7 @@ Default credentials are in the project (see `docker-compose.yml`).
 - Cache and DB failures are non-fatal — gameplay continues.
 - Use `LOG_LEVEL=DEBUG` for full pipeline visibility.
 
-See `docs/ARCHITECTURE.md`, `docs/PRD.md`, and `docs/SPRINT_1.md` for deeper details.
+See `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, and `docs/sprints/` for deeper details.
 
 ---
 
@@ -300,7 +312,7 @@ See `docs/ARCHITECTURE.md`, `docs/PRD.md`, and `docs/SPRINT_1.md` for deeper det
 
 ## Contributing
 
-Pull requests welcome! Please run `make test` and ensure new code follows the validation + logging patterns.
+Pull requests welcome! Please run `make check` and ensure new code follows the validation + logging patterns.
 
 ---
 

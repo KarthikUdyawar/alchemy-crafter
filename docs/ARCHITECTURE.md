@@ -19,6 +19,7 @@ The system gracefully degrades across layers:
 All combinations are **order-independent** (`fire + water` == `water + fire`).
 
 ### Core Principles
+
 - **Cache aggressively**, fall back safely
 - **Never trust the LLM** without strict validation
 - **Idempotent & consistent** results for the same pair
@@ -71,6 +72,7 @@ flowchart TD
 ```
 
 **Key behaviors**:
+
 - Inputs are always **normalized and sorted** alphabetically.
 - AI generation includes recent context (last `CONTEXT_SIZE` elements).
 - Strict output validation (single lowercase word, alphanumeric + limited punctuation).
@@ -80,7 +82,7 @@ flowchart TD
 
 ## 📁 Project Structure
 
-```
+```text
 alchemy-crafter/
 ├── src/
 │   ├── config.py            # Env + settings
@@ -108,7 +110,7 @@ alchemy-crafter/
 │       ├── state.py         # Session, streaks, milestones
 │       └── display.py       # ANSI formatting
 │
-├── tests/                   # 85+ unit tests (mostly offline)
+├── tests/                   # unit + integration tests
 ├── docker-compose.yml
 ├── Dockerfile.server
 ├── Makefile
@@ -173,14 +175,14 @@ graph LR
 
 ## 🔧 Key Design Decisions
 
-| Decision                              | Rationale                                                                 |
-|---------------------------------------|---------------------------------------------------------------------------|
-| Sorted tuple for pairs                | Guarantees `fire+water` == `water+fire` everywhere                       |
-| Redis-first + silent failures         | Keeps gameplay responsive even if cache/DB is temporarily unavailable    |
-| Strict single-word validation         | Prevents "muddy water" or "a big explosion of flames" style outputs      |
-| Context injection in prompts          | Makes later discoveries more coherent and thematically consistent        |
-| Idempotent DB init + base seeds       | Safe restarts and consistent starting experience                         |
-| Separate `elements` and `recipes` tables | Allows fast "does this element exist?" checks                           |
+| Decision                                 | Rationale                                                             |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| Sorted tuple for pairs                   | Guarantees `fire+water` == `water+fire` everywhere                    |
+| Redis-first + silent failures            | Keeps gameplay responsive even if cache/DB is temporarily unavailable |
+| Strict single-word validation            | Prevents "muddy water" or "a big explosion of flames" style outputs   |
+| Context injection in prompts             | Makes later discoveries more coherent and thematically consistent     |
+| Idempotent DB init + base seeds          | Safe restarts and consistent starting experience                      |
+| Separate `elements` and `recipes` tables | Allows fast "does this element exist?" checks                         |
 
 ---
 
@@ -204,10 +206,12 @@ graph LR
 
 ## 📚 Related Documents
 
-- [README.md](./README.md) — Overview and quick start
-- [PRD.md](./docs/PRD.md) — Product requirements
-- [SPRINT_1.md](./docs/SPRINT_1.md) — First sprint scope
-- [API.md](./docs/API.md) — Full endpoint reference
+- [README.md](../README.md) — Overview and quick start
+- [ROADMAP.md](./ROADMAP.md) — Product requirements and sprint list
+- [Sprint 1](./sprints/S1/PRD.md), [Sprint 2](./sprints/S2/PRD.md) — Sprint scope
+- [DECISION.md](./DECISION.md) — Decision log
+- [STRUCTURE.md](./STRUCTURE.md) — Generated repository tree
+- [API.md](./API.md) — Full endpoint reference
 
 ---
 
