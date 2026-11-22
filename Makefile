@@ -110,7 +110,7 @@ nuke: ## ⚠️  Stop services AND delete all volumes (wipes DB + Redis data)
 
 clear-db: ## ⚠️  Truncate recipes, keep base elements
 	docker compose exec postgres psql -U alchemy -d alchemy -c \
-		"TRUNCATE TABLE recipes; DELETE FROM elements WHERE name NOT IN ('fire','water','earth','air');"
+		"TRUNCATE TABLE recipes; DELETE FROM discovered WHERE name NOT IN ('fire','water','earth','air'); DELETE FROM elements WHERE name NOT IN ('fire','water','earth','air');"
 
 clear-redis: ## ⚠️  Flush Redis
 	docker compose exec redis redis-cli FLUSHDB

@@ -169,3 +169,60 @@ class TestDbIntegration:
         assert get_recipe("fire", "water") == "steam"
         recipes = get_all_recipes()
         assert any(r["result"] == "steam" for r in recipes)
+
+    @pytest.mark.integration
+    def test_init_discovers_base_elements(self):
+        from src.db import init_db
+        from src.db.queries import get_discovered
+
+        init_db()
+        discovered = get_discovered()
+        for base in ("fire", "water", "earth", "air"):
+            assert base in discovered
+
+
+class TestDiscoveredQueriesUnit:
+    @pytest.mark.unit
+    def test_get_discovered_returns_names_in_order(self, mocker):
+        from src.db.queries import get_discovered
+
+        cur = mocker.MagicMock()
+        cur.fetchall.return_value = [("fire",), ("water",)]
+        conn = mocker.MagicMock()
+        conn.__enter__.return_value = conn
+        conn.cursor.return_value.__enter__.return_value = cur
+        mocker.patch("src.db.queries.get_connection", return_value=conn)
+
+        assert get_discovered() == ["fire", "water"]
+
+    @pytest.mark.unit
+    def test_mark_discovered_inserts_and_commits(self, mocker):
+        from src.db.queries import mark_discovered
+
+        cur = mocker.MagicMock()
+        conn = mocker.MagicMock()
+        conn.__enter__.return_value = conn
+        conn.cursor.return_value.__enter__.return_value = cur
+        mocker.patch("src.db.queries.get_connection", return_value=conn)
+
+        mark_discovered("steam")
+
+        cur.execute.assert_called_once()
+        sql, params = cur.execute.call_args.args
+        assert "INSERT INTO discovered" in sql
+        assert "ON CONFLICT" in sql
+        assert params == ("steam",)
+        conn.commit.assert_called_once()
+
+
+class TestInitDbUnit:
+    @pytest.mark.unit
+    def test_backfills_discovered_from_existing_elements(self, mock_conn):
+        from src.db.connection import init_db
+
+        _, cur = mock_conn
+
+        init_db()
+
+        sqls = [call.args[0] for call in cur.execute.call_args_list]
+        assert any("INSERT INTO discovered" in q and "FROM elements" in q for q in sqls)

@@ -11,8 +11,14 @@ from src.cache import (
     set_cached_recipe,
 )
 from src.db import get_recipe, save_element, save_recipe
+from src.db.queries import get_discovered, mark_discovered
 from src.logger import get_logger
-from src.validation import ValidationError, validate_element, validate_inputs
+from src.validation import (
+    UnknownElementError,
+    ValidationError,
+    validate_element,
+    validate_inputs,
+)
 
 log = get_logger("combine")
 
@@ -37,7 +43,7 @@ class CombineResult:
 def combine(raw_a: str, raw_b: str) -> CombineResult:
     """Run the full combine pipeline.
 
-    1. Validate + normalise inputs (sorted)
+    1. Validate + normalise inputs (sorted); both must be discovered
     2. Redis cache
     3. Postgres
     4. Ollama (with validation retry)
@@ -48,6 +54,12 @@ def combine(raw_a: str, raw_b: str) -> CombineResult:
     # 1. Validate inputs
     a, b = validate_inputs(raw_a, raw_b)
     log.debug("combine(%s, %s)", a, b)
+
+    discovered = set(get_discovered())
+    unknown = [name for name in (a, b) if name not in discovered]
+    if unknown:
+        missing = ", ".join(unknown)
+        raise UnknownElementError(f"Unknown element(s): {missing}. Discover them first.")
 
     def _ms() -> int:
         return int((time.monotonic() - t0) * 1000)
@@ -63,6 +75,7 @@ def combine(raw_a: str, raw_b: str) -> CombineResult:
     # 3. DB
     stored = get_recipe(a, b)
     if stored:
+        mark_discovered(stored)
         set_cached_recipe(a, b, stored)
         add_to_context(stored)
         reset_fail(a, b)
@@ -92,6 +105,7 @@ def combine(raw_a: str, raw_b: str) -> CombineResult:
     # 5. Persist
     is_new = save_element(result_name)
     save_recipe(a, b, result_name)
+    mark_discovered(result_name)
     set_cached_recipe(a, b, result_name)
     add_to_context(result_name)
     reset_fail(a, b)

@@ -48,6 +48,12 @@ def init_db() -> None:
         created_at TIMESTAMP DEFAULT NOW(),
         UNIQUE (element_a, element_b)
     );
+
+    CREATE TABLE IF NOT EXISTS discovered (
+        id         SERIAL PRIMARY KEY,
+        name       TEXT UNIQUE NOT NULL REFERENCES elements (name),
+        created_at TIMESTAMP DEFAULT NOW()
+    );
     """
     base_elements = ["fire", "water", "earth", "air"]
 
@@ -59,6 +65,11 @@ def init_db() -> None:
                     "INSERT INTO elements (name) VALUES (%s) ON CONFLICT DO NOTHING",
                     (el,),
                 )
+            # Single-player: every known element is discovered. Also keeps old databases playable.
+            cur.execute(
+                "INSERT INTO discovered (name) SELECT name FROM elements ORDER BY id "
+                "ON CONFLICT DO NOTHING"
+            )
         conn.commit()
 
     log.info("DB initialised — base elements seeded")

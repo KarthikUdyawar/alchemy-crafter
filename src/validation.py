@@ -87,3 +87,7 @@ def validate_inputs(a: str, b: str) -> tuple[str, str]:
 
     # Sort for order-independence: fire+water == water+fire
     return tuple(sorted([a_clean, b_clean]))  # type: ignore[return-value]
+
+
+class UnknownElementError(ValidationError):
+    """An input element is not in the player's discovered set."""

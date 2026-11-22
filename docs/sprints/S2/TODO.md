@@ -15,8 +15,8 @@ Scope: [PRD.md](PRD.md). Decisions: [DECISION.md](../../DECISION.md).
 ### 🎮 PLAY-1 — Player progress
 
 - [ ] RED: combine rejects undiscovered element; discoveries survive restart
-- [ ] `discovered` table + `mark_discovered`, `get_discovered`; seed 4 base
-- [ ] `combine()` requires discovered inputs; marks result discovered
+- [x] `discovered` table + `mark_discovered`, `get_discovered`; seed 4 base
+- [x] `combine()` requires discovered inputs; marks result discovered
 - [ ] CLI `list` reads discovered; `GET /elements` stays global
 - [ ] Skip: player ids, `player:<id>:discovered` Redis set (single-player, YAGNI)
 

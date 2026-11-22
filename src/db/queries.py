@@ -94,3 +94,24 @@ def get_all_recipes() -> list[dict[str, str]]:
             }
             for r in rows
         ]
+
+
+# ── Discovered ────────────────────────────────────────────────────────────────
+
+
+def get_discovered() -> list[str]:
+    """Return the elements the player has discovered, ordered by discovery."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT name FROM discovered ORDER BY id")
+        return [row[0] for row in cur.fetchall()]
+
+
+def mark_discovered(name: str) -> None:
+    """Record an element as discovered. Idempotent."""
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO discovered (name) VALUES (%s) ON CONFLICT DO NOTHING",
+                (name,),
+            )
+        conn.commit()

@@ -96,3 +96,58 @@ class TestCombineBadInputs:
         with pytest.raises(ValidationError):
             combine(a, b)
         spy.assert_not_called()
+
+
+class TestCombineDiscoveredOnly:
+    @pytest.mark.unit
+    def test_undiscovered_input_rejected_before_io(self, mocker):
+        from src.validation import UnknownElementError
+
+        mocker.patch("src.combine.get_discovered", return_value=["fire", "water"])
+        spy = mocker.patch("src.combine.get_cached_recipe")
+
+        with pytest.raises(UnknownElementError, match="steam"):
+            combine("fire", "steam")
+        spy.assert_not_called()
+
+
+class TestCombineMarksDiscovered:
+    @pytest.mark.unit
+    def test_ai_result_marked_discovered(self, mocked_pipeline, mocker):
+        mark = mocker.patch("src.combine.mark_discovered")
+
+        combine("fire", "water")
+
+        mark.assert_called_once_with("steam")
+
+    @pytest.mark.unit
+    def test_db_hit_marked_discovered(self, mocked_pipeline, mocker):
+        mocker.patch("src.combine.get_recipe", return_value="steam")
+        mark = mocker.patch("src.combine.mark_discovered")
+
+        combine("fire", "water")
+
+        mark.assert_called_once_with("steam")
+
+    @pytest.mark.unit
+    def test_cache_hit_skips_mark(self, mocker):
+        mocker.patch("src.combine.get_cached_recipe", return_value="steam")
+        mocker.patch("src.combine.add_to_context")
+        mocker.patch("src.combine.reset_fail")
+        mark = mocker.patch("src.combine.mark_discovered")
+
+        combine("fire", "water")
+
+        mark.assert_not_called()
+
+    @pytest.mark.unit
+    def test_marked_before_cached(self, mocked_pipeline, mocker):
+        order: list[str] = []
+        mocker.patch("src.combine.mark_discovered", side_effect=lambda _n: order.append("mark"))
+        mocked_pipeline["cache"]["set_cached_recipe"].side_effect = lambda *_a: order.append(
+            "cache"
+        )
+
+        combine("fire", "water")
+
+        assert order == ["mark", "cache"]

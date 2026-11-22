@@ -51,3 +51,17 @@ def mock_ai(mocker):
 def mocked_pipeline(mock_db, mock_cache, mock_ai):
     """All external I/O patched. Useful for combine() unit tests."""
     return {"db": mock_db, "cache": mock_cache, "ai": mock_ai}
+
+
+@pytest.fixture(autouse=True)
+def mock_discovered(mocker):
+    """Default: only the four base elements are discovered."""
+    return mocker.patch(
+        "src.combine.get_discovered", return_value=["fire", "water", "earth", "air"]
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_mark_discovered(mocker):
+    """Default: marking a discovery is a no-op."""
+    return mocker.patch("src.combine.mark_discovered")
