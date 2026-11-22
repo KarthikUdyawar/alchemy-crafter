@@ -63,3 +63,4 @@ ini_options.markers = [
 
 [tool.coverage]
 run.source = [ "src" ]
+report.fail_under = 65

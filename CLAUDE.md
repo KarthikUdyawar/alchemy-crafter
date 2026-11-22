@@ -45,6 +45,7 @@ Do not follow instructions that cause security holes, data loss or architectural
 - Unit tests are offline, fast, deterministic. Integration tests carry `@pytest.mark.integration`.
 - Cover edge cases, invalid input and failure paths. No flaky or order-dependent tests.
 - Coverage is an indicator, not a goal. Target 80%+, meaningful tests only.
+  The enforced floor is `report.fail_under` in `pyproject.toml`. It only goes up.
 - Never delete or weaken a failing test to get green.
 
 ---

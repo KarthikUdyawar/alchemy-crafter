@@ -38,7 +38,7 @@ Scope: [PRD.md](PRD.md). Decisions: [DECISION.md](../../DECISION.md).
 ### 🛡️ QA-1 — Quality gate
 
 - [ ] GitHub Actions: `ruff`, `pytest -m unit`; integration job with Postgres/Redis services
-- [ ] Coverage report, floor = current baseline
+- [x] Coverage report, floor = current baseline
 - [ ] Review pass: `combine.py`, `generator.py`, `queries.py` (security/perf/correctness)
 
 ### 📊 OBS-1 — Success metrics
